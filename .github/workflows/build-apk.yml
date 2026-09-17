@@ -1,0 +1,55 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # This project has no committed gradlew/gradle-wrapper.jar, so we
+      # install Gradle directly instead of relying on a wrapper script.
+      # If you add a Gradle wrapper to the repo later (recommended —
+      # run `gradle wrapper` locally and commit the result), switch the
+      # build step below to `./gradlew assembleDebug` and you can drop
+      # this Gradle-install step.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      # ubuntu-latest GitHub-hosted runners already ship a full Android
+      # SDK at $ANDROID_HOME/$ANDROID_SDK_ROOT with recent platforms and
+      # build-tools preinstalled, so no separate SDK-install action is
+      # needed (android-actions/setup-android is unmaintained and fails
+      # trying to install the long-removed legacy "tools" package). We
+      # just need to make sure the exact platform/build-tools versions
+      # this project needs are present and licenses are accepted.
+      - name: Ensure required SDK packages & licenses
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
