@@ -41,6 +41,13 @@ jobs:
       # this project needs are present and licenses are accepted.
       - name: Ensure required SDK packages & licenses
         run: |
+          # Locate whichever cmdline-tools version is preinstalled and put
+          # its bin/ on PATH for this step (the runner doesn't export it by
+          # default in a plain bash step).
+          SDKMANAGER_DIR=$(dirname "$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 2 -name sdkmanager -type f | sort -V | tail -n1)")
+          echo "Using sdkmanager from: $SDKMANAGER_DIR"
+          export PATH="$SDKMANAGER_DIR:$PATH"
+
           yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
