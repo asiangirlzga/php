@@ -21,7 +21,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # Android SDK is preinstalled on ubuntu-latest (ANDROID_HOME is set).
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
 
       # No Gradle wrapper in the repo, so install Gradle directly.
       - uses: gradle/actions/setup-gradle@v4
@@ -37,7 +40,13 @@ jobs:
       # Debug builds are signed with the default debug key, so the APK
       # installs directly on a device (an unsigned release APK would not).
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          gradle assembleDebug --no-daemon --console=plain --warning-mode=summary 2>&1 | tee build.log || {
+            echo "=== ERROR SUMMARY ==="
+            grep -nE "^e: |error:|What went wrong|Execution failed|> .*(not found|Could not|failed)|AAPT" -A4 build.log | head -80
+            exit 1
+          }
 
       - name: Rename APK
         run: cp app/build/outputs/apk/debug/app-debug.apk PhpServerApp.apk
