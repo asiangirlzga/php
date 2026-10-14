@@ -29,15 +29,16 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Verify Environment and Check Projects
+      - name: Force Print Gradle Project Diagnostics
         run: |
-          echo "Checking Gradle version..."
-          gradle --version
-          echo "Checking available Gradle projects..."
-          gradle projects --stacktrace
+          echo "=== START DIAGNOSTICS ==="
+          gradle projects --stacktrace > build_diag.log 2>&1 || true
+          cat build_diag.log
+          echo "=== END DIAGNOSTICS ==="
+          if grep -q "BUILD FAILED" build_diag.log; then exit 1; fi
 
       - name: Build release APK
-        run: gradle assembleRelease --no-daemon --stacktrace
+        run: gradle assembleRelease --no-daemon
 
       - name: Rename APK
         run: cp app/build/outputs/apk/release/app-release.apk HindiTV.apk
