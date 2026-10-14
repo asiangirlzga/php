@@ -29,11 +29,15 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Build release APK with Debug Logs
+      - name: Verify Environment and Check Projects
         run: |
-          gradle assembleRelease --no-daemon --debug > gradle_debug.log 2>&1 || true
-          cat gradle_debug.log
-          if grep -q "BUILD FAILED" gradle_debug.log; then exit 1; fi
+          echo "Checking Gradle version..."
+          gradle --version
+          echo "Checking available Gradle projects..."
+          gradle projects --stacktrace
+
+      - name: Build release APK
+        run: gradle assembleRelease --no-daemon --stacktrace
 
       - name: Rename APK
         run: cp app/build/outputs/apk/release/app-release.apk HindiTV.apk
