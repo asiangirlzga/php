@@ -43,6 +43,8 @@ jobs:
         run: |
           set -o pipefail
           gradle assembleDebug --no-daemon --console=plain --warning-mode=summary 2>&1 | tee build.log || {
+            echo "=== KOTLIN ERRORS ==="
+            grep -E "^e: |^w: .*PhpServer|^w: .*MainActivity" build.log || echo "(no e: lines found)"
             echo "=== ERROR SUMMARY ==="
             grep -nE "^e: |error:|What went wrong|Execution failed|> .*(not found|Could not|failed)|AAPT" -A4 build.log | head -80
             exit 1
