@@ -22,7 +22,8 @@ jobs:
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-
+      with:
+        packages: 'platform-tools' # <-- Add this to bypass the deprecated "tools" package
     # Automatically accepts all licenses required by sdkmanager
     - name: Accept Android Licenses
       run: |
