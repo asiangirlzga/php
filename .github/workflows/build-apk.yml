@@ -21,36 +21,35 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # Android SDK is preinstalled on ubuntu-latest (ANDROID_HOME is set),
-      # so no separate SDK setup step is needed.
+      # Android SDK is preinstalled on ubuntu-latest (ANDROID_HOME is set).
 
-      # The project has no Gradle wrapper, so install Gradle directly.
+      # No Gradle wrapper in the repo, so install Gradle directly.
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Force Print Gradle Project Diagnostics
+      - name: Check for php binaries
         run: |
-          echo "=== START DIAGNOSTICS ==="
-          gradle projects --stacktrace > build_diag.log 2>&1 || true
-          cat build_diag.log
-          echo "=== END DIAGNOSTICS ==="
-          if grep -q "BUILD FAILED" build_diag.log; then exit 1; fi
+          if ! find app/src/main/jniLibs -name 'libphp.so' | grep -q .; then
+            echo "::warning::No libphp.so found in app/src/main/jniLibs/<abi>/ - the APK will build but the app will report 'php binary not found' at runtime."
+          fi
 
-      - name: Build release APK
-        run: gradle assembleRelease --no-daemon
+      # Debug builds are signed with the default debug key, so the APK
+      # installs directly on a device (an unsigned release APK would not).
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/release/app-release.apk HindiTV.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk PhpServerApp.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: HindiTV-apk
-          path: HindiTV.apk
+          name: PhpServerApp-apk
+          path: PhpServerApp.apk
 
       # Pushing a tag like v1.0 also publishes the APK as a GitHub Release.
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: HindiTV.apk
+          files: PhpServerApp.apk
