@@ -32,6 +32,10 @@ jobs:
     # If you use Gradle, make the wrapper executable and build
     - name: Grant Execute Permission for Gradle
       run: chmod +x gradlew
+      working-directory: android # <-- Change this to your subfolder name
 
     - name: Build with Gradle
       run: ./gradlew assembleDebug
+      working-directory: android # <-- Change this to match
+
+
