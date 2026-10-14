@@ -30,14 +30,14 @@ jobs:
           gradle-version: '8.7'
 
       - name: Build release APK
-        run: gradle assembleRelease --no-daemon
+        run: gradle assembleRelease --no-daemon --stacktrace --info
 
       - name: Rename APK
         run: cp app/build/outputs/apk/release/app-release.apk php.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: php-apk
+          name: php.apk
           path: php.apk
 
       # Pushing a tag like v1.0 also publishes the APK as a GitHub Release.
